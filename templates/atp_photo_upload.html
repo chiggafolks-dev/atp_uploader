@@ -430,44 +430,64 @@
         const container = document.getElementById("coverSheetFields");
         const card = document.getElementById("coverSheetCard");
 
-        // 🔴 NO placeholders → hide entire cover sheet
         if (!textFields || textFields.length === 0) {
           card.classList.add("d-none");
           textFieldValues = {};
           return;
         }
 
-        // 🟢 Placeholders exist → show cover sheet
         card.classList.remove("d-none");
 
         let html = "";
 
         textFields.forEach((field) => {
-          const fieldId = `text_${
-            field.placeholder_key ||
-            field.type.toLowerCase().replace(/\s+/g, "_")
-          }`;
+          // Create a clean field ID
+          const fieldId = `text_${field.placeholder_key}`;
+
+          // Determine if required
+          const isRequired =
+            field.required ||
+            ["site_id", "site_name", "project_code", "date"].includes(
+              field.placeholder_key,
+            );
+
+          // Special handling for date - pre-fill with today's date
+          let defaultValue = "";
+          if (field.placeholder_key === "date") {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, "0");
+            const mm = String(today.getMonth() + 1).padStart(2, "0");
+            const yyyy = today.getFullYear();
+            defaultValue = `${dd}/${mm}/${yyyy}`;
+          }
 
           html += `
-            <div class="text-field-group required-field" id="field-group-${fieldId}">
+            <div class="text-field-group ${isRequired ? "required-field" : ""}" id="field-group-${fieldId}">
                 <label class="form-label">
-                    ${field.type || field.placeholder}
-                    <span class="text-danger">*</span>
+                    ${field.display_name || field.placeholder}
+                    ${isRequired ? '<span class="text-danger">*</span>' : ""}
                 </label>
                 <input
                     type="text"
                     class="form-control form-control-sm"
                     id="${fieldId}"
-                    required
+                    ${isRequired ? "required" : ""}
+                    value="${defaultValue}"
+                    placeholder="Enter ${field.display_name || field.placeholder}"
                     oninput="updateTextFieldValue('${fieldId}', this.value)"
                 />
+                <small class="text-muted">${field.location || ""}</small>
             </div>
         `;
 
-          textFieldValues[fieldId] = "";
+          // Store initial value
+          textFieldValues[fieldId] = defaultValue;
         });
 
         container.innerHTML = html;
+
+        // Trigger validation after fields are added
+        validateForm();
       }
 
       // NEW: Default cover sheet fields if no placeholders are detected

@@ -110,14 +110,13 @@ def analyze_template():
 
 # ... (other imports and code remain the same) ...
 
-
 def standardize_key(key):
     """
     Standardize placeholder keys to a consistent format.
-    Example: 'siteid' -> 'site_id', 'SITEID' -> 'site_id'
     """
     # Convert to lowercase first
     key = key.lower()
+    key = key.replace('text_', '')  # Remove 'text_' prefix if present
 
     # Handle common variations
     variations = {
@@ -126,6 +125,12 @@ def standardize_key(key):
         "scopeofwork": "scope_of_work",
         "devicetype": "device_type",
         "projectcode": "project_code",
+        "sk1": "sk_1",
+        "siteid1": "site_id1",
+        "sitename1": "site_name1",
+        # Add date variations
+        "tanggal": "date",
+        "tgl": "date",
     }
 
     return variations.get(key, key)
@@ -168,6 +173,10 @@ def upload_photos():
             "site_id1",
             "sk1",
             "sk_1",
+            "date",  # ADD THIS
+            "engineer",  # ADD THIS
+            "location",  # ADD THIS
+            "address",  # ADD THIS
         ]
 
         for key in possible_text_keys:
