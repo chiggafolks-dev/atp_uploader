@@ -18,6 +18,7 @@ TEXT_PLACEHOLDERS = [
     "[SCOPE_OF_WORK]",
     "[DEVICE_TYPE]",
     "[PROJECT_CODE]",
+    "[DATE]",
 ]
 
 
@@ -45,19 +46,6 @@ class ATPDocxInserter:
         """
         mappings = []
 
-        # Check all paragraphs
-        # for para_idx, paragraph in enumerate(self.doc.paragraphs):
-        #     text = paragraph.text.strip()
-        #     if self.is_photo_placeholder(text):
-        #         mappings.append(
-        #             {
-        #                 "type": "paragraph",
-        #                 "paragraph_index": para_idx,
-        #                 "placeholder": text,
-        #                 "photo_type": self.get_photo_type(text),
-        #                 "location": f"Paragraph {para_idx + 1}",
-        #             }
-        #         )
         for para_idx, paragraph in enumerate(self.doc.paragraphs):
             text = paragraph.text.strip()
             if self.is_photo_placeholder(text):
@@ -69,25 +57,6 @@ class ATPDocxInserter:
                 "location": f"Paragraph {para_idx + 1}",
             })
 
-        # Check all tables
-        # for table_idx, table in enumerate(self.doc.tables):
-        #     for row_idx, row in enumerate(table.rows):
-        #         for cell_idx, cell in enumerate(row.cells):
-        #             for para_idx, paragraph in enumerate(cell.paragraphs):
-        #                 text = paragraph.text.strip()
-        #                 if self.is_photo_placeholder(text):
-        #                     mappings.append(
-        #                         {
-        #                             "type": "table_cell",
-        #                             "table_index": table_idx,
-        #                             "row_index": row_idx,
-        #                             "cell_index": cell_idx,
-        #                             "paragraph_index": para_idx,
-        #                             "placeholder": text,
-        #                             "photo_type": self.get_photo_type(text),
-        #                             "location": f"Table {table_idx + 1}, Cell ({row_idx + 1},{cell_idx + 1})",
-        #                         }
-        #                     )
         for table_idx, table in enumerate(self.doc.tables):
             for row_idx, row in enumerate(table.rows):
                 for cell_idx, cell in enumerate(row.cells):
@@ -107,68 +76,6 @@ class ATPDocxInserter:
 
 
         return mappings
-
-    # def detect_text_placeholders(self):
-    #     """
-    #     Detect text placeholder patterns in the DOCX document.
-    #     """
-    #     mappings = []
-    #     text_patterns = [
-    #         r"\[SITE_?ID\]",
-    #         r"\[SITE_?NAME\]",
-    #         r"\[HOSTNAME\]",
-    #         r"\[SCOPE_?OF_?WORK\]",
-    #         r"\[DEVICE_?TYPE\]",
-    #         r"\[PROJECT_?CODE\]",
-    #         r"\[DATE\]",
-    #         r"\[ENGINEER\]",
-    #         r"\[LOCATION\]",
-    #         r"\[ADDRESS\]",
-    #         r"\[SK_?1\]",   # 👈 THIS LINE
-    #         # Add more patterns as needed
-    #     ]
-
-    #     # Check paragraphs
-    #     for para_idx, paragraph in enumerate(self.doc.paragraphs):
-    #         text = paragraph.text
-    #         for pattern in text_patterns:
-    #             if re.search(pattern, text, re.IGNORECASE):
-    #                 mappings.append(
-    #                     {
-    #                         "type": "paragraph",
-    #                         "paragraph_index": para_idx,
-    #                         "placeholder": re.search(
-    #                             pattern, text, re.IGNORECASE
-    #                         ).group(0),
-    #                         "location": f"Paragraph {para_idx + 1}",
-    #                     }
-    #                 )
-    #                 break
-
-    #     # Check tables
-    #     for table_idx, table in enumerate(self.doc.tables):
-    #         for row_idx, row in enumerate(table.rows):
-    #             for cell_idx, cell in enumerate(row.cells):
-    #                 for para_idx, paragraph in enumerate(cell.paragraphs):
-    #                     text = paragraph.text
-    #                     for pattern in text_patterns:
-    #                         if re.search(pattern, text, re.IGNORECASE):
-    #                             mappings.append(
-    #                                 {
-    #                                     "type": "table_cell",
-    #                                     "table_index": table_idx,
-    #                                     "row_index": row_idx,
-    #                                     "cell_index": cell_idx,
-    #                                     "paragraph_index": para_idx,
-    #                                     "placeholder": re.search(
-    #                                         pattern, text, re.IGNORECASE
-    #                                     ).group(0),
-    #                                     "location": f"Table {table_idx + 1}, Cell ({row_idx + 1},{cell_idx + 1})",
-    #                                 }
-    #                             )
-    #                             break
-
-    #     return mappings
 
     def detect_text_placeholders(self):
         mappings = []
@@ -289,79 +196,26 @@ class ATPDocxInserter:
             print(f"Error inserting photo: {e}")
             return False
 
-    # def replace_text(self, placeholder, replacement_text):
-    #     """
-    #     Replace text placeholder with actual text.
-
-    #     Args:
-    #         placeholder: The placeholder text to replace (e.g., [SITE_ID])
-    #         replacement_text: The text to insert
-    #     """
-    #     # Search in paragraphs
-    #     for paragraph in self.doc.paragraphs:
-    #         if placeholder.upper() in paragraph.text.upper():
-    #             paragraph.text = paragraph.text.replace(placeholder, replacement_text)
-
-    #     # Search in tables
-    #     for table in self.doc.tables:
-    #         for row in table.rows:
-    #             for cell in row.cells:
-    #                 for paragraph in cell.paragraphs:
-    #                     if placeholder.upper() in paragraph.text.upper():
-    #                         paragraph.text = paragraph.text.replace(
-    #                             placeholder, replacement_text
-    #                         )
 
     def replace_text(self, placeholder, replacement_text):
         placeholder_upper = placeholder.upper()
 
-    # Paragraphs
-        for paragraph in self.doc.paragraphs:
+        def replace_in_paragraph(paragraph):
             for run in paragraph.runs:
                 if placeholder_upper in run.text.upper():
                     run.text = run.text.replace(placeholder, replacement_text)
+
+    # Paragraphs
+        for paragraph in self.doc.paragraphs:
+            replace_in_paragraph(paragraph)
+
 
     # Tables
         for table in self.doc.tables:
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
-                        for run in paragraph.runs:
-                            if placeholder_upper in run.text.upper():
-                                run.text = run.text.replace(placeholder, replacement_text)
-
-    # def replace_all_text(self, text_values):
-    #     """
-    #     Replace all text placeholders with values from dictionary.
-
-    #     Args:
-    #         text_values: Dictionary mapping placeholder keys to values
-    #     """
-    #     placeholder_mapping = {
-    #         "before_tower1": ["[BEFORE_TOWER1]", "[BEFORETOWER1]"],
-    #         "after_tower1": ["[AFTER_TOWER1]", "[AFTERTOWER1]"],
-    #         "hostname": ["[HOSTNAME]"],
-    #         "scope_of_work": ["[SCOPE_OF_WORK]", "[SCOPEOFWORK]"],
-    #         "device_type": ["[DEVICE_TYPE]", "[DEVICETYPE]"],
-    #         "project_code": ["[PROJECT_CODE]", "[PROJECTCODE]"],
-    #         "date": ["[DATE]"],
-    #         "engineer": ["[ENGINEER]"],
-    #         "location": ["[LOCATION]"],
-    #         "address": ["[ADDRESS]"],
-    #         "systemkey1" : "[SK_1]",
-    #         "site_id1" : "[SITE_ID1]",
-    #         "site_name1":"[SITE_NAME1]",
-    #     }
-
-    #     for key, value in text_values.items():
-    #         if value:
-    #             if key in placeholder_mapping:
-    #                 for placeholder in placeholder_mapping[key]:
-    #                     self.replace_text(placeholder, value)
-    #             else:
-    #                 # Try generic placeholder format
-    #                 generic_placeholder = f"[{key.upper()}]"
-    #                 self.replace_text(generic_placeholder, value)
+                        replace_in_paragraph(paragraph)
 
 
     def replace_all_text(self, text_values):
